@@ -15,6 +15,7 @@ output:
 library(flexdashboard)
 library(gt.emidata)
 library(here)
+library(kableExtra)
 library(tidyverse, quietly=T)
 library(forcats, quietly=T)
 library(cowplot, quietly=T)    # publication-ready theme for ggplot2
@@ -54,7 +55,9 @@ n_papers = nrow(all_data)
 assessment_type <- c("NO ASSESSMENT", "USABILITY/UX", "EFFECT AND USABILITY/UX", "EFFECT")
 assessment_type_n <- sapply(assessment_type, FUN = function(x) {nrow(filter(all_data, val_type == x))})
 
-n_assessment_yes <- n_papers - assessment_type_n[[1]] 
+n_assessment_no <- assessment_type_n[[1]]
+n_assessment_yes <- n_papers - n_assessment_no 
+
 
 # Keep the same order of mental disorder for all charts 
 temp_for_order <- 
@@ -74,23 +77,103 @@ md_all_ordered <- levels(temp_for_order$md_desc)
 # Adjust labels lenght for figures production
 md_lbl_production <- c(
   "Depressive disorders", 
-  "Anxiety disorders",
-  "Trauma and\n stressor-related disorders",
   "Various disorders",
+  "Anxiety disorders",
   "Substance-related and\n addictive disorders",
   "Schizophrenia spectrum and\n other psychotic disorders",
+  "Trauma and\n stressor-related disorders",
   "Suicidal behavior disorder/\nnonsuicidal self-injury",
   "Comorbid disorders",
   "Bipolar and related disorders",
-  "Neurodevelopmental disorders",
   "Obsessive-Compulsive and\n related disorders",
+  "Neurodevelopmental disorders",
   "Feeding and eating disorders",
   "Sleep-wake disorders",
-  "Personality disorders")    
+  "Personality disorders",
+  "Major and Mild\n Neurocognitive Disorders")    
 
 
 default_palette <- c("NO ASSESSMENT"="#AF8DC3", "USABILITY/UX"="#D9F0D3", "EFFECT AND USABILITY/UX"="#7FBF7B", "EFFECT"="#1B7837")
 ```
+
+### Table 1. Distribution of assessment types
+
+```{r tab1, echo=FALSE}
+data_tbl_assess <- 
+    all_data %>%
+    select(val_type) %>%
+    group_by(val_type) %>%
+    summarise(n = n()) %>%
+    mutate(n_lbl = if_else(val_type == "NO ASSESSMENT", 
+                           paste0(n, " (", round(n/n_papers*100,1), "%)*"),
+                           paste0(n, " (", round(n/n_assessment_yes*100,1), "%)†")))
+
+data_tbl_rct <- 
+    all_data %>%
+    select(val_type, val_edrct) %>%
+    filter(val_edrct == "RCT") %>%
+    group_by(val_type, val_edrct) %>%
+    summarise(n = n()) %>%
+    ungroup() %>%
+    mutate(n_papers_rct = sum(n),
+           n_lbl = paste0(n, " (", round(n/n_papers_rct*100,1), "%)‡"))
+
+n_papers_rct <- data_tbl_rct$n_papers_rct[1] 
+  
+data_tbl_pilotrct <- 
+    all_data %>%
+    select(val_type, val_edrct) %>%
+    filter(val_edrct == "PILOT RCT") %>%
+    group_by(val_type, val_edrct) %>%
+    summarise(n = n()) %>%
+    ungroup() %>%
+    mutate(n_papers_pilot = sum(n),
+           n_lbl = paste0(n, " (", round(n/n_papers_pilot*100,1), "%)‡"))
+
+n_papers_pilot <-  data_tbl_pilotrct$n_papers_pilot[1]
+
+data_tbl_assesstype <-
+  data_tbl_assess %>%
+  full_join(data_tbl_rct, by="val_type", suffix=c("",".rct")) %>%
+  full_join(data_tbl_pilotrct, by="val_type", suffix=c("",".pilot")) %>%
+  select(-n, -val_edrct, -n.rct, -val_edrct.pilot, -n.pilot)
+
+data_tbl_assesstype$val_type <- forcats::fct_relevel(data_tbl_assesstype$val_type, assessment_type) 
+
+# Aggregate the sum of the theee types of assessment 
+data_tbl_assesstype <- 
+  data_tbl_assesstype %>% 
+  arrange(val_type) %>%
+  add_row(.after = 1, 
+          val_type="ASSESSMENT (total)", 
+          n_lbl=paste0(n_assessment_yes, " (", round(n_assessment_yes/n_papers*100,1), "%)*"), 
+          n_lbl.rct=paste0(n_papers_rct, " (", round(n_papers_rct/n_assessment_yes*100,1), "%)†"),
+          n_lbl.pilot=paste0(n_papers_pilot, " (", round(n_papers_pilot/n_assessment_yes*100,1), "%)†"))
+
+# Table output with Kable
+options(knitr.kable.NA = '0 (0%)')
+data_tbl_assesstype %>%
+    select(`Assessment type` = val_type,
+           `N (%)` = n_lbl,
+           `RCT - N (%)` = n_lbl.rct,
+           `PILOT RCT - N (%)` = n_lbl.pilot) %>%
+    knitr::kable(format="html", escape = T, booktabs = TRUE,    
+          caption = "Distribution of assessment types.") %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+    row_spec(1, bold = T, color = "white", background = default_palette[["NO ASSESSMENT"]]) %>%
+    row_spec(3, bold = T, color = "black", background = default_palette[["USABILITY/UX"]]) %>%
+    row_spec(4, bold = T, color = "black", background = default_palette[["EFFECT AND USABILITY/UX"]]) %>%
+    row_spec(5, bold = T, color = "white", background = default_palette[["EFFECT"]]) %>%
+    add_indent(3:5) %>%
+    column_spec(1, bold = T) %>%
+    footnote(symbol = 
+             c("Percentage based on the total number of studies",
+               "Percentage based on the number of studies with an assessment",
+               "Percentage based on number of (Pilot) RCT studies"))
+
+```
+
+***
 
 
 
@@ -184,70 +267,6 @@ plot_tempdist
 - The grey bar in the top figure denotes the estimated number of papers in 2018 (three months covered).
  
 - It combines two plots. The top one is a _stacked bar chart_ over years, and the value of each group (assessment type) is in absolute counts. The bottom one is a _proportional stacked area chart_ in which the sum of each year is always equal to hundred, and the value of each group (assessment type) is in percentages.
-
-
-### New table. Treatment modalities.
-
-```{r tab_assessmenttypes, echo=FALSE}
-
-data_tbl_assess <- 
-    all_data %>%
-    select(val_type) %>%
-    group_by(val_type) %>%
-    summarise(n = n()) %>%
-    mutate(n_lbl = paste0(n, " (", round(n/n_papers*100,1), "%)"))
-
-data_tbl_rct <- 
-    all_data %>%
-    select(val_type, val_edrct) %>%
-    filter(val_edrct == "RCT") %>%
-    group_by(val_type, val_edrct) %>%
-    summarise(n = n()) %>%
-    mutate(n_lbl = paste0(n, " (", round(n/n_papers*100,1), "%)"))
-
-
-data_tbl_pilotrct <- 
-    all_data %>%
-    select(val_type, val_edrct) %>%
-    filter(val_edrct == "PILOT RCT") %>%
-    group_by(val_type, val_edrct) %>%
-    summarise(n = n()) %>%
-    mutate(n_lbl = paste0(n, " (", round(n/n_papers*100,1), "%)"))
-
-data_tbl_assesstype <-
-  data_tbl_assess %>%
-  full_join(data_tbl_rct, by="val_type", suffix=c("",".rct")) %>%
-  full_join(data_tbl_pilotrct, by="val_type", suffix=c("",".pilot")) %>%
-  select(-n, -val_edrct, -n.rct, -val_edrct.pilot, -n.pilot)
-
-data_tbl_assesstype$val_type <- forcats::fct_relevel(data_tbl_assesstype$val_type, assessment_type) 
-
-
-# Table output with DT
-data_tbl_assesstype %>%
-    arrange(val_type) %>%
-    select(`Assessment type` = val_type,
-           `N (%)` = n_lbl,
-           `RCT - N (%)` = n_lbl.rct,
-           `PILOT RCT - N (%)` = n_lbl.pilot) %>%
-    datatable(rownames = FALSE, 
-            class = "table-bordered table-condensed hover",
-            extensions = c("Buttons"),
-            options = list(
-               pageLength = 5, #autoWidth = TRUE,
-               dom = 'Bti',  # https://datatables.net/reference/option/dom
-               buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
-            )) %>%
-      formatStyle('Assessment type',  fontWeight = 'bold')
-```
-
-***
-
-Response to G.7 _"The authors may consider presenting the data in the 'Evolution of research and assessment' paragraph using a table instead."_
-
-- This table can substitute the last paragraph of section “Evolution of research and assessment”. 
-
-- To add __"0 (0%)"__ in the cell "Usability/UX" x "PILOT RCT - N (0%)"
 
 
 ### Figure 3: Distribution of articles per mental disorder, categorized according to assessment type. 
@@ -560,10 +579,10 @@ plot_topmd
 A _line chart_ to show the number of papers per mental disorder and year. 
 
 
-### Table 1: Mental disorders and the studies targeting them.
+### Table 2: Mental disorders and the studies targeting them.
 
 
-```{r tab1, echo=FALSE}
+```{r tab2, echo=FALSE}
 
 unite_paper_ids <- function(mentaldisorder, appname) {
     if (!is.na(appname)) {
