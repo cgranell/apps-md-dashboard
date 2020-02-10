@@ -1,5 +1,5 @@
 ---
-title: "JMIR paper dashboard"
+title: "JMU paper dashboard"
 output: 
   flexdashboard::flex_dashboard:
     # orientation: columns
@@ -11,9 +11,8 @@ output:
 
 ---
 
-```{r setup, include=TRUE, warning=FALSE}
+```{r setup, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
 library(flexdashboard)
-library(gt.emidata)
 library(here)
 library(kableExtra)
 library(tidyverse, quietly=T)
@@ -33,21 +32,8 @@ library(DT, quietly=T)
 ```
 
 
-```{r create_data, echo=FALSE}
-# FIXME: temporal solution. Create all_data.rda/csv instead
-all_data <- 
-  papers2018 %>% 
-  inner_join(papers2018_tech, by="id") %>%
-  inner_join(papers2018_psy, by="id") %>%
-  arrange(id)
-
-```
-
-
-
 ```{r all_data, echo=FALSE}
-# FIXME: local dataset
-#load(file = here("all_data.rda"))
+load(file = here("data", "all_data.rda"))
 
 n_md <- nlevels(all_data$md_desc)
 n_papers = nrow(all_data)
@@ -57,7 +43,6 @@ assessment_type_n <- sapply(assessment_type, FUN = function(x) {nrow(filter(all_
 
 n_assessment_no <- assessment_type_n[[1]]
 n_assessment_yes <- n_papers - n_assessment_no 
-
 
 # Keep the same order of mental disorder for all charts 
 temp_for_order <- 
@@ -74,7 +59,7 @@ temp_for_order$md_desc <- factor(temp_for_order$md_desc, levels=unique(temp_for_
 md_all_ordered <- levels(temp_for_order$md_desc)
 
 
-# Adjust labels lenght for figures production
+# Adjust labels length for figures production, based on the order of MD given in 'md_all_ordered'
 md_lbl_production <- c(
   "Depressive disorders", 
   "Various disorders",
@@ -85,12 +70,12 @@ md_lbl_production <- c(
   "Suicidal behavior disorder/\nnonsuicidal self-injury",
   "Comorbid disorders",
   "Bipolar and related disorders",
-  "Obsessive-Compulsive and\n related disorders",
+  "Obsessive-compulsive and\n related disorders",
   "Neurodevelopmental disorders",
   "Feeding and eating disorders",
   "Sleep-wake disorders",
   "Personality disorders",
-  "Major and Mild\n Neurocognitive Disorders")    
+  "Major and mild\n neurocognitive disorders")    
 
 
 default_palette <- c("NO ASSESSMENT"="#AF8DC3", "USABILITY/UX"="#D9F0D3", "EFFECT AND USABILITY/UX"="#7FBF7B", "EFFECT"="#1B7837")
@@ -105,8 +90,8 @@ data_tbl_assess <-
     group_by(val_type) %>%
     summarise(n = n()) %>%
     mutate(n_lbl = if_else(val_type == "NO ASSESSMENT", 
-                           paste0(n, " (", round(n/n_papers*100,1), "%)*"),
-                           paste0(n, " (", round(n/n_assessment_yes*100,1), "%)†")))
+                           paste0(n, "/",n_papers, " (", round(n/n_papers*100,1), "%)*"),
+                           paste0(n, "/",n_assessment_yes, " (", round(n/n_assessment_yes*100,1), "%)†")))
 
 data_tbl_rct <- 
     all_data %>%
@@ -116,7 +101,7 @@ data_tbl_rct <-
     summarise(n = n()) %>%
     ungroup() %>%
     mutate(n_papers_rct = sum(n),
-           n_lbl = paste0(n, " (", round(n/n_papers_rct*100,1), "%)‡"))
+           n_lbl = paste0(n, "/",n_papers_rct," (", round(n/n_papers_rct*100,1), "%)‡"))
 
 n_papers_rct <- data_tbl_rct$n_papers_rct[1] 
   
@@ -128,9 +113,18 @@ data_tbl_pilotrct <-
     summarise(n = n()) %>%
     ungroup() %>%
     mutate(n_papers_pilot = sum(n),
-           n_lbl = paste0(n, " (", round(n/n_papers_pilot*100,1), "%)‡"))
+           n_lbl = paste0(n, "/",n_papers_pilot, " (", round(n/n_papers_pilot*100,1), "%)‡"))
 
-n_papers_pilot <-  data_tbl_pilotrct$n_papers_pilot[1]
+n_papers_pilot <- data_tbl_pilotrct$n_papers_pilot[1]
+
+#### Special case: there is no USABILITY/UX assessment with Pilot RCT. Add case
+data_tbl_pilotrct <- 
+  data_tbl_pilotrct %>%
+  add_row(val_type = assessment_type[2],
+          val_edrct = "PILOT RCT",
+          n = 0,
+          n_papers_pilot	= n_papers_pilot,
+          n_lbl = paste0(n, "/",n_papers_pilot," (", round(n/n_papers_pilot*100,1), "%)‡"))
 
 data_tbl_assesstype <-
   data_tbl_assess %>%
@@ -146,18 +140,18 @@ data_tbl_assesstype <-
   arrange(val_type) %>%
   add_row(.after = 1, 
           val_type="ASSESSMENT (total)", 
-          n_lbl=paste0(n_assessment_yes, " (", round(n_assessment_yes/n_papers*100,1), "%)*"), 
-          n_lbl.rct=paste0(n_papers_rct, " (", round(n_papers_rct/n_assessment_yes*100,1), "%)†"),
-          n_lbl.pilot=paste0(n_papers_pilot, " (", round(n_papers_pilot/n_assessment_yes*100,1), "%)†"))
+          n_lbl=paste0(n_assessment_yes, "/",n_papers, " (", round(n_assessment_yes/n_papers*100,1), "%)*"), 
+          n_lbl.rct=paste0(n_papers_rct, "/",n_assessment_yes, " (", round(n_papers_rct/n_assessment_yes*100,1), "%)†"),
+          n_lbl.pilot=paste0(n_papers_pilot, "/",n_assessment_yes , " (", round(n_papers_pilot/n_assessment_yes*100,1), "%)†"))
 
 # Table output with Kable
-options(knitr.kable.NA = '0 (0%)')
+options(knitr.kable.NA = 'N/A')
 data_tbl_assesstype %>%
     select(`Assessment type` = val_type,
-           `N (%)` = n_lbl,
+           `ALL - N (%)` = n_lbl,
            `RCT - N (%)` = n_lbl.rct,
            `PILOT RCT - N (%)` = n_lbl.pilot) %>%
-    knitr::kable(format="html", escape = T, booktabs = TRUE,    
+    knitr::kable(format="html", escape = T, booktabs = TRUE,
           caption = "Distribution of assessment types.") %>%
     kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
     row_spec(1, bold = T, color = "white", background = default_palette[["NO ASSESSMENT"]]) %>%
@@ -166,10 +160,12 @@ data_tbl_assesstype %>%
     row_spec(5, bold = T, color = "white", background = default_palette[["EFFECT"]]) %>%
     add_indent(3:5) %>%
     column_spec(1, bold = T) %>%
-    footnote(symbol = 
-             c("Percentage based on the total number of studies",
-               "Percentage based on the number of studies with an assessment",
-               "Percentage based on number of (Pilot) RCT studies"))
+    footnote(symbol =
+               c(paste0("Percentage based on the total number of studies (N=",n_papers,")"),
+                 paste0("Percentage based on the number of studies with an assessment (N=",n_assessment_yes,")"),
+                 paste0("Percentage based on the number of RCT (N=",n_papers_rct,") and Pilot RCT studies (N=",n_papers_pilot,"), respectively")))
+
+
 
 ```
 
@@ -203,70 +199,43 @@ data_plot_tempdist <-
 # brewer.pal(n = 6, name = "PRGn")[2:5]
 pal <- default_palette
 
-# FIXME: an estimate of published papers to this matter for 2018. Use real figures instead
-prediction_2018 <- 52
-
 plot_tempdist_stakedbarchart <- 
     data_plot_tempdist %>%
         ggplot(aes(x=year, y=number_cases, fill=val_type)) + 
         geom_bar(stat="identity") +
-        geom_text(aes(label=number_cases), size=2.5,position=position_stack(vjust = 0.5)) +
+        geom_text(aes(label=paste0(number_cases, " - ", proportion_lbl)), size=2.7, position=position_stack(vjust = 0.5)) +
+        stat_summary(fun.y = sum, aes(label=..y.., group=year), geom = "text", vjust=-.2) +
         labs(#title="Count of papers per year colored by assessment type", 
-             x="", 
-             y="# of papers") +
+             x="Year", 
+             y="Number of papers - Percentage of papers [%] per year") +
         scale_fill_manual(values = pal) +
         scale_x_continuous(breaks = seq(2013,2018, by=1)) +
-        guides(fill="none") +
-        # Prediction 2018
-        annotate("rect", alpha = 0.2, 
-            xmin = 2018 - 0.45, xmax = 2018 + 0.45,
-            ymin = 13, ymax = prediction_2018, linetype="dashed") +
+        scale_y_continuous(breaks = seq(0, 60, by=10)) +
+        guides(fill=guide_legend(title="Assessment type", nrow=4)) + # modify legend title
         theme_minimal() +
-        # Change the line type and color of axis lines
-        theme(axis.line = element_line(colour = "darkgray", size = 0.5, linetype = "solid")) +
-        theme(panel.grid.minor = element_blank()) +
-        theme(panel.background = element_blank()) +
-        theme(plot.margin=unit(rep(20, 4), "pt"))
-
-# plot_tempdist_stakedbarchart
-
-plot_tempdist_areachart <- 
-    data_plot_tempdist %>%
-        ggplot(aes(x=year, y=proportion, fill=val_type)) + 
-        geom_area() +
-        labs(#title="Temporal distribution of papers per assessment type",
-        x="Year", 
-        y="Percentage of papers [%]", 
-        caption="Source: authors") + 
-        guides(fill=guide_legend(title="Assessment Type", nrow=2)) + # modify legend title
-        scale_fill_manual(values = pal) +
-        scale_y_continuous(expand=c(0,0), labels=scales::percent_format(), breaks=seq(0, 1.00, by=0.20), limits=c(0, 1.00)) +
-        theme_minimal() +
+        # Add legend in the top-left corner of the plot
         theme(legend.title = element_text(size=11), 
-              legend.position = "bottom",
+              # legend.justification = c('right', 'top'),
+              legend.position = c(0.20, 0.75),
               legend.background = element_rect(color = "darkgray", size = 0.5, linetype ="solid"),
               legend.key = element_blank()) +
         # Change the line type and color of axis lines
         theme(axis.line = element_line(colour = "darkgray", size = 0.5, linetype = "solid")) +
-        theme(panel.grid.major = element_blank()) + 
         theme(panel.grid.minor = element_blank()) +
         theme(panel.background = element_blank()) +
         theme(plot.margin=unit(rep(20, 4), "pt"))
 
-#plot_tempdist_areachart
-
-# Put labels = C("A", "B") to identify subfigures 
-plot_tempdist <- cowplot::plot_grid(plot_tempdist_stakedbarchart, plot_tempdist_areachart, labels = NULL, ncol= 1, align = "v") 
-plot_tempdist
-
+plot_tempdist_stakedbarchart
 
 ```
 
 ***
 
-- The grey bar in the top figure denotes the estimated number of papers in 2018 (three months covered).
+- Figure 2 shows the temporal distribution of research over the study period 2013-2018, along with their reported assessment type. Overall, we observed a positive evolution of the amount of research over time, steadily increasing from only few (7) articles in 2013 to a much larger amount (60) in 2018.
  
-- It combines two plots. The top one is a _stacked bar chart_ over years, and the value of each group (assessment type) is in absolute counts. The bottom one is a _proportional stacked area chart_ in which the sum of each year is always equal to hundred, and the value of each group (assessment type) is in percentages.
+- Looking at the distribution of assessment types over time, we observe an overall slow proportional increase of studies with an assessment.
+
+- Regarding the type of assessment, we observe that only a fifth of the articles with assessment (22/113, 19.5%) focus specifically on the effect of intervention on clinical symptomatology (drak green).
 
 
 ### Figure 3: Distribution of articles per mental disorder, categorized according to assessment type. 
