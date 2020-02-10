@@ -348,7 +348,7 @@ plot_barchart
 - `r lbl_subtitle`
 
 
-### New table. Type assessment per mental disorder category
+### Breakdown ofassessment types per mental disorder
 
 ```{r stats_assesstype_md, echo=FALSE}
 
@@ -378,90 +378,78 @@ data_plot_barchart %>%
 
 ***
 
-To complement figure 3, some percentages are discussed in the body of the article which are included in the following table.
+- To complement figure 3, some percentages are discussed in the body of the article which are included in the table.
 
-
-
-### New table. Characteristics of included studies/app 
 
 ```{r tab_apps, echo=FALSE}
-data_all_apps <- 
-  all_data %>%
-  select(app_name, md_desc, year, id, fmw_cbt, fmw_wav, fmw_pos, fmw_tra, ux_gui, ux_gesture, ux_voice, ux_text) %>%
-  filter(!is.na(app_name)) %>%
-  arrange(md_desc, year)
-
-
-# a custom table container
-sketch <- 
-  htmltools::withTags(table(
-  class = 'display',
-  thead(
-    tr(
-      th(rowspan = 2, 'APP NAME'),
-      th(rowspan = 2, 'MD CATEGORY'),
-      th(rowspan = 2, 'YEAR'),
-      th(rowspan = 2, 'REF'),
-      th(colspan = 4, 'PSY FRAMEWORK'),
-      th(colspan = 3, 'UX')
-    ),
-    tr(
-      lapply(c('CBT', 'WAV', 'TRA', 'POS'), th),
-      lapply(c('GES', 'VOI', 'TXT'), th)
-    )
-  )
-))
-
-# sketch
-
-data_all_apps %>%
-  select(`APP NAME` = app_name,
-         `MD CATEGORY` = md_desc,
-         `YEAR` = year,
-         `REF`= id,
-         `CBT` = fmw_cbt,
-         `WAV` = fmw_wav,
-         `TRA` = fmw_tra,
-         `POS` = fmw_pos,
-         `GES` = ux_gesture,
-         `VOI` = ux_voice,
-         `TXT` = ux_text) %>%
-  datatable(container = sketch, rownames = FALSE, 
-            filter = "top",
-            class = "table-bordered table-condensed hover",
-            extensions = "Buttons",
-            options = list(
-               pageLength = 6, #autoWidth = TRUE,
-               dom = 'Bfrtip',  # https://datatables.net/reference/option/dom
-               buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
-            )) %>%
-    formatStyle('CBT',
-      backgroundColor = styleEqual(c("YES", "NO"), c('red', ''))) %>%
-    formatStyle('WAV',
-      backgroundColor = styleEqual(c("YES", "NO"), c('orange', ''))) %>%
-    formatStyle('TRA',
-      backgroundColor = styleEqual(c("YES", "NO"), c('yellow', ''))) %>%
-    formatStyle('POS',
-      backgroundColor = styleEqual(c("YES", "NO"), c('blue', ''))) %>%
-    # formatStyle('GUI',
-    #   backgroundColor = styleEqual(c("YES", "NO"), c('lightgreen', ''))) %>%
-    formatStyle('GES',
-      backgroundColor = styleEqual(c("YES", "NO"), c('lightgreen', ''))) %>%
-    formatStyle('VOI',
-      backgroundColor = styleEqual(c("YES", "NO"), c('lightgreen', ''))) %>%
-    formatStyle('TXT',
-      backgroundColor = styleEqual(c("YES", "NO"), c('lightgreen', '')))
+# data_all_apps <- 
+#   all_data %>%
+#   select(app_name, md_desc, year, id, fmw_cbt, fmw_wav, fmw_pos, fmw_tra, ux_gui, ux_gesture, ux_voice, ux_text) %>%
+#   filter(!is.na(app_name)) %>%
+#   arrange(md_desc, year)
+# 
+# 
+# # a custom table container
+# sketch <- 
+#   htmltools::withTags(table(
+#   class = 'display',
+#   thead(
+#     tr(
+#       th(rowspan = 2, 'APP NAME'),
+#       th(rowspan = 2, 'MD CATEGORY'),
+#       th(rowspan = 2, 'YEAR'),
+#       th(rowspan = 2, 'REF'),
+#       th(colspan = 4, 'PSY FRAMEWORK'),
+#       th(colspan = 3, 'UX')
+#     ),
+#     tr(
+#       lapply(c('CBT', 'WAV', 'TRA', 'POS'), th),
+#       lapply(c('GES', 'VOI', 'TXT'), th)
+#     )
+#   )
+# ))
+# 
+# # sketch
+# 
+# data_all_apps %>%
+#   select(`APP NAME` = app_name,
+#          `MD CATEGORY` = md_desc,
+#          `YEAR` = year,
+#          `REF`= id,
+#          `CBT` = fmw_cbt,
+#          `WAV` = fmw_wav,
+#          `TRA` = fmw_tra,
+#          `POS` = fmw_pos,
+#          `GES` = ux_gesture,
+#          `VOI` = ux_voice,
+#          `TXT` = ux_text) %>%
+#   datatable(container = sketch, rownames = FALSE, 
+#             filter = "top",
+#             class = "table-bordered table-condensed hover",
+#             extensions = "Buttons",
+#             options = list(
+#                pageLength = 6, #autoWidth = TRUE,
+#                dom = 'Bfrtip',  # https://datatables.net/reference/option/dom
+#                buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+#             )) %>%
+#     formatStyle('CBT',
+#       backgroundColor = styleEqual(c("YES", "NO"), c('red', ''))) %>%
+#     formatStyle('WAV',
+#       backgroundColor = styleEqual(c("YES", "NO"), c('orange', ''))) %>%
+#     formatStyle('TRA',
+#       backgroundColor = styleEqual(c("YES", "NO"), c('yellow', ''))) %>%
+#     formatStyle('POS',
+#       backgroundColor = styleEqual(c("YES", "NO"), c('blue', ''))) %>%
+#     # formatStyle('GUI',
+#     #   backgroundColor = styleEqual(c("YES", "NO"), c('lightgreen', ''))) %>%
+#     formatStyle('GES',
+#       backgroundColor = styleEqual(c("YES", "NO"), c('lightgreen', ''))) %>%
+#     formatStyle('VOI',
+#       backgroundColor = styleEqual(c("YES", "NO"), c('lightgreen', ''))) %>%
+#     formatStyle('TXT',
+#       backgroundColor = styleEqual(c("YES", "NO"), c('lightgreen', '')))
 ```  
 
-***
-
-Response to issue [Characteristics of included studies/app](https://github.com/cgranell/apps-treatment-mental-disorders/issues/1)
-
-- The table attempts to recreate the aesthetics of Table 1 in [Evaluation Strategies for HCI Toolkit Research, CHI2018](https://dl.acm.org/citation.cfm?doid=3173574.3173610)
-- FIXME: Which variables per app are left?
-- FIXME: all studies (w/o appname) vs studies with appname?
-- FIXME: same app in different years. How to manage it?
-- FIXME: ux_gui is not significative. Group all "ux" variables under "UX headings" ans do a second table as in the example paper?
 
 
 ### Figure 4: Distribution of articles published for the top 6 mental disorders over time.
@@ -500,21 +488,20 @@ brks <- levels(data_plot_topmd$md_desc)
 plot_topmd <-
     data_plot_topmd %>%
         ggplot(aes(x=year, y=number_cases, group=md_desc)) +
-        geom_vline(aes(xintercept = 2017), color="lightgray", linetype = "dashed", size = 0.5) +
-        annotate("rect", xmin = 2017, xmax = 2018, ymin = -Inf, ymax = +Inf, fill = "lightgray", alpha = 0.2) +
         geom_line(aes(color=md_desc), size=2.5, alpha=.4) +
-        geom_point(shape=21, size=7, color="darkgray", fill="white") +
-        labs(#title="Distribution top mental disorders per year", 
-             #subtitle = paste0("Top mental disorders (", top_lbl,")"),
+        geom_point(shape=21, size=9, color="darkgray", fill="white") +
+        labs(title="Distribution top mental disorders per year", 
+             subtitle = paste0("Top mental disorders (", top_lbl,")"),
              x="Year", 
-             y="# of papers", 
+             y="Number of papers",  
              caption="Source: authors") + 
-        scale_color_brewer(name="Mental disorders", palette="Set2", breaks=brks) + # labels=md_top_lbls
+        scale_color_brewer(name="Mental disorders", palette="Set2", breaks=brks) +
         geom_text(aes(label = number_cases), color= "black", size=3) +
-        scale_y_continuous(breaks=seq(0,8,by=1)) +
+        scale_y_continuous(breaks=seq(0,13,by=1)) +
         theme_minimal() +
         # Legend: Top-Left Inside the Plot"
-        theme(legend.justification = c('left', 'top'),
+        theme(legend.title = element_text(size=11),
+              legend.justification = c('left', 'top'),
               legend.position=c(0.05, 0.95),  
               legend.background = element_rect(color = "darkgray", size = 0.5, linetype ="solid"),
               legend.key = element_blank()) +
@@ -526,10 +513,18 @@ plot_topmd <-
         theme(axis.line = element_line(colour = "darkgray", size = 0.5, linetype = "solid"))
 
 plot_topmd
+
 ```
 
 ***
-A _line chart_ to show the number of papers per mental disorder and year. 
+
+- It shows the temporal trend of the top six mental disorders targeted by studies over the period 2013-2018. 
+
+- Overall, we observe an increasing number of published articles related to the top six mental disorders over time, with a significant increase since 2015. 
+
+- We note that the relative ranking of the top six mental disorders is largely maintained since 2015, with two notable exceptions: __trauma and stressor-related disorders__ sharply decreased in 2018, and __various disorders__ significantly increased in the last 2 years, reaching the first and second positions, respectively.
+
+- We also point out the doubling of research on __depressive disorders__, which was already well researched previously, in 2018.
 
 
 ### Table 2: Mental disorders and the studies targeting them.
