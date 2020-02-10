@@ -173,7 +173,7 @@ data_tbl_assesstype %>%
 
 
 
-### Figure 2: Temporal trend of amount of articles published and assessment type.
+### Figure 2. Temporal trend of amount of articles published and assessment type.
 
 ```{r fig2_tempdist, fig.width=10, fig.height=22, fig.asp=1}
 cols <- c("md", "md_id", "md_desc", "val_type", "year")
@@ -238,7 +238,7 @@ plot_tempdist_stakedbarchart
 - Regarding the type of assessment, we observe that only a fifth of the articles with assessment (22/113, 19.5%) focus specifically on the effect of intervention on clinical symptomatology (drak green).
 
 
-### Figure 3: Distribution of articles per mental disorder, categorized according to assessment type. 
+### Figure 3. Distribution of articles per mental disorder, categorized according to assessment type. 
 
 ```{r fig3_barchart, echo=FALSE, fig.width=10,fig.asp=0.65}
 cols <- c("md", "md_id", "md_desc", "val_type")
@@ -452,7 +452,7 @@ data_plot_barchart %>%
 
 
 
-### Figure 4: Distribution of articles published for the top 6 mental disorders over time.
+### Figure 4. Distribution of articles published for the top 6 mental disorders over time.
 
 ```{r fig4_linechart, echo=FALSE, fig.width=12, fig.height=14, fig.asp=0.65}
 
@@ -527,7 +527,7 @@ plot_topmd
 - We also point out the doubling of research on __depressive disorders__, which was already well researched previously, in 2018.
 
 
-### Table 2: Mental disorders and the studies targeting them.
+### Table 2. Mental disorders and the studies targeting them.
 
 
 ```{r tab2, echo=FALSE}
@@ -591,14 +591,12 @@ data_kp_apps %>%
 
 
 ***
-A tabular, compact distribution of papers (apps) per mental disorder, grouping the references per app. The number(s) in brackets next to the app name is the reference(s) in which the app is mentioned. 
-
-- In the table, these references are internal identifiers instead. 
+- A tabular, compact distribution of papers (apps) per mental disorder, grouping the references per app. The number(s) in brackets next to the app name is the reference(s) in which the app is mentioned. __NOTE: these references are internal identifiers instead.__ 
 
 - NA = app name not available/not mentioned.
 
 
-### Figure 5: Bubble plot representing technology-related dimensions versus mental disorders.
+### Figure 5. Bubble plot representing technology-related dimensions versus mental disorders.
 
 ```{r fig5_feat, echo=FALSE, warning=FALSE}
 cols = c("id", "md_id", "md_desc", 
@@ -841,9 +839,11 @@ kp_bubblechart
 
 
 ***
-- software features - orange; built-in sensors - green; analytics - blue  
+- It plots the technology-related dimensions, namely, software features implemented by the studied apps (in orange), the utilized built-in sensors (in green), and analytics (in blue), vs the type of mental disorders. Bubble size corresponds with number of articles.
 
-- Bubble size corresponds with amount of articles.
+- Within each technology-related dimension (X axis), features are ranked by their decreasing popularity over all mental disorders (left-right; occurrence count is shown at the top of each column); mental disorders (Y axis) are similarly ordered by decreasing popularity in literature (bottom-up).
 
-- It is a _bubble plot_ that shows the distribution of papers per mental disorder (bubble size) and technology-related characteristics grouped by dimensions (bubble color): software features, built-in sensors, and analytics. Technology-related characteristics are ranked in each dimension.
+- It shows to which extent, and for which disorder(s), the state of the art is leveraging hardware- and/or software-related smartphone capabilities.
+
+- We note that larger bubbles tend to be concentrated at the bottom of the graph, as the most popular mental disorders have a higher number of articles, which also tend to cover more varied technical dimensions.
 
