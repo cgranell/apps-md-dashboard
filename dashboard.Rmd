@@ -205,7 +205,7 @@ plot_tempdist_stakedbarchart <-
         geom_bar(stat="identity") +
         geom_text(aes(label=paste0(number_cases, " - ", proportion_lbl)), size=2.7, position=position_stack(vjust = 0.5)) +
         stat_summary(fun.y = sum, aes(label=..y.., group=year), geom = "text", vjust=-.2) +
-        labs(#title="Count of papers per year colored by assessment type", 
+        labs(title="Temporal trend of articles coloured by assessment type", 
              x="Year", 
              y="Number of papers - Percentage of papers [%] per year") +
         scale_fill_manual(values = pal) +
@@ -231,7 +231,7 @@ plot_tempdist_stakedbarchart
 
 ***
 
-- Figure 2 shows the temporal distribution of research over the study period 2013-2018, along with their reported assessment type. Overall, we observed a positive evolution of the amount of research over time, steadily increasing from only few (7) articles in 2013 to a much larger amount (60) in 2018.
+- It shows the temporal distribution of research over the study period 2013-2018, along with their reported assessment type. Overall, we observed a positive evolution of the amount of research over time, steadily increasing from only few (7) articles in 2013 to a much larger amount (60) in 2018.
  
 - Looking at the distribution of assessment types over time, we observe an overall slow proportional increase of studies with an assessment.
 
@@ -272,14 +272,34 @@ lbls <- distinct(data_plot_barchart, md_desc, proportion_sum, proportion_lbl)
 top_proportion <- sum(lbls[1:6, "proportion_sum"]) 
 top_lbl <- paste0(round(top_proportion*100,1), "%")
 
+
+# Compute aggregated results for assessment types
+data_table <-
+    data_plot_barchart %>%
+    group_by(val_type) %>%
+    summarise(total_asstype = sum(number_cases)) %>%
+    mutate(lbl = paste0(round(total_asstype/n_papers*100,1), "%"))
+
+data_table[1] <- c("No assessment", "Usability/UX", "Effect + Usability/UX", "Effect")
+
+lbl_subtitle <- "Aggregated results of assessment types: "
+for (i in 1:nrow(data_table)) {
+  lbl_subtitle <- paste0(lbl_subtitle, data_table[i,1], " ", data_table[i,2], "/", n_papers, 
+                     " (" ,data_table[i,3], ")")
+  if (i==nrow(data_table))
+      lbl_subtitle <- paste0(lbl_subtitle, ".")
+  else
+      lbl_subtitle <- paste0(lbl_subtitle, ", ")  
+}
+
+
 plot_barchart <- 
     data_plot_barchart %>%
       ggplot(aes(x=md_desc, y=proportion, fill=val_type)) + 
         geom_bar(stat="identity") +
-        labs(#title="Distribution per mental disorder and assessment type", 
-             #subtitle = "Total percentatge per mental disorder within each point",
+        labs(title="Distribution per mental disorder and assessment type", 
              x="Mental disorders", 
-             y="# of papers and total percentage", 
+             y="Number of papers and total percentage", 
              caption="Source: authors") + 
         geom_point(aes(y=proportion_sum), size=6, color="white", show.legend = F) +  
         geom_text(aes(label=number_cases), size=2.5, position=position_stack(vjust = 0.4)) +
@@ -299,14 +319,14 @@ plot_barchart <-
                          xend="Schizophrenia spectrum and other psychotic disorders", 
                          yend=0.18), color="black") +
         coord_flip() +
-        scale_fill_manual(name="Assessment Type", values = pal) +
+        scale_fill_manual(name="Assessment type", values = pal) +
         scale_x_discrete(labels = md_lbl_production) +
         scale_y_continuous(expand=c(0,0), labels=scales::percent_format(accuracy=1), breaks=seq(0, 0.21, by=0.02), limits=c(0, 0.21)) +
         # Which legend to show
-        guides(fill=guide_legend(title="Assessment Type", nrow=2)) + # modify legend title
+        guides(fill=guide_legend(title="Assessment type", nrow=4)) + # modify legend title
         theme_minimal()  +
         theme(legend.title = element_text(size=11),
-              legend.position = "bottom",
+              legend.position = c(0.70, 0.75),
               legend.background = element_rect(color = "darkgray", size = 0.5, linetype ="solid"),
               legend.key = element_blank()) +
         # Change the line type and color of axis lines
@@ -316,52 +336,16 @@ plot_barchart <-
         theme(panel.background = element_blank()) +
         theme(plot.margin=unit(rep(20, 4), "pt"))
 
-# plot_barchart
+plot_barchart
 
-data_plot_piechart <-
-    data_plot_barchart %>%
-    group_by(val_type) %>%
-    summarise(total_asstype = sum(number_cases)) %>%
-    mutate(lbl = paste0(round(total_asstype/n_papers*100,1), "%"),
-           cumulative= cumsum(total_asstype),
-           midpoint = cumulative-total_asstype/2) %>% 
-    arrange(desc(total_asstype))
-
-data_plot_piechart$val_type <- forcats::fct_relevel(data_plot_piechart$val_type, assessment_type)
-
-plot_piechart <- 
-    data_plot_piechart %>%
-    ggplot(aes(x="", y=total_asstype, fill=val_type)) +
-    geom_bar(width=1, stat = "identity") +
-    coord_polar(theta="y", start=0, direction = 1) +
-    geom_text(aes(y=midpoint, label=lbl), size=3, show.legend = F) +
-    scale_fill_manual(name="Assessment Type", values = pal) + 
-    # Which legend to show
-    guides(fill="none") +
-    theme_minimal() +
-    theme(legend.title = element_text(size=9)) +
-    theme(axis.text = element_blank(),
-          axis.ticks = element_blank(),
-          panel.grid = element_blank()) +
-    theme(panel.border = element_rect(fill=NA, colour = "darkgray", size=0.5)) +
-    labs(x=NULL, y=NULL, title="Accumulated results [%]")
-
-# plot_piechart
-
-plot_dist_md <-
-    ggdraw() +
-    draw_plot(plot_barchart) +
-    draw_plot(plot_piechart, 0.55, 0.55, 0.40, 0.40)
-
-plot_dist_md
 
 ```
 
 ***
 
-- The embedded pie chart shows the proportional distribution of types of assessment over all mental disorders.
+- It shows the number of studies per mental disorder, ranked in ascending order and subcategorized according to the type of assessment.
 
-- The main plot is a _stacked barchart_ colored by assessment type along with a _lollipop chart_ (white circle at the end of each bar) that shows the total percentatge of each mental disorder. Note that we draw two main colors in the legend: purple represents no assessment at all, the range of greens denotes distinct types of assessment. A _pie chart_ is embedded to show the proportional distribution of types of assessment over all mental disorders.
+- `r lbl_subtitle`
 
 
 ### New table. Type assessment per mental disorder category
