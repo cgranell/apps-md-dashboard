@@ -120,9 +120,11 @@ valueBox("73%", icon = "fa-notes-medical", color = "primary")
 
 ## 
 
-### Citation {data-height=75}
+### Citation {data-height=100}
 
-Ignacio Miralles, Carlos Granell, Laura Díaz-Sanahuja, William Van Woensel, Juana Bretón-López, Adriana Mira, Diana Castilla, Sven Casteleyn (2020). __Smartphone apps for the treatment of mental disorders: a systematic review__. _JMIR mHealth and uHealth_, 2020. [10.2196/14897](https://doi.org/10.2196/14897)
+Ignacio Miralles, Carlos Granell, Laura Díaz-Sanahuja, William Van Woensel, Juana Bretón-López, Adriana Mira, Diana Castilla, Sven Casteleyn (2020). __Smartphone apps for the treatment of mental disorders: a systematic review__. _JMIR mHealth and uHealth_, 8(3): e14897, 2020. [![DOI](https://img.shields.io/badge/DOI-10.2196/14897-yellow.svg)](https://doi.org/10.2196/14897)
+
+Data and Software Availability: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3609267.svg)](https://doi.org/10.5281/zenodo.3609267)
 
 ### Abstract
 
